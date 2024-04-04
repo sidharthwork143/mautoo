@@ -100,8 +100,11 @@ async def delete_message(_, message):
 
     delete_time = group["delete_time"]
 
-    # Delete the message
-    await message.delete(delay=delete_time)
+    try:
+        # Delete the message
+        await message.delete(delay=delete_time)
+    except Exception as e:
+        print(f"An error occurred: {e}/n/n Group ID: {chat_id}")    
 
 
 # Flask configuration
