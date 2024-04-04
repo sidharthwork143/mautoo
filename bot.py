@@ -29,11 +29,14 @@ bot = Client(
 async def start(_, message):
     button = [[
         InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
-        InlineKeyboardButton("📝 Updates Channel", url=f"https://t.me/botsync"),
+        ],[
+        InlineKeyboardButton("📝 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"Hello {message.from_user.mention},\n\nI am a AutoDelete Bot.\n\nI can delete your groups messages automatically after a certain period of time\n\n Add me as a admin in your group and give delete permisions\n\nUsage: /set_time <delete_time_in_seconds>",
-        reply_markup=InlineKeyboardMarkup(button)
+        f"<b>Hello {message.from_user.mention},\nI am a AutoDelete Bot.\n\nI can delete your groups messages automatically after a certain period of time\nAdd me as a admin in your group and give delete permisions\nUsage:</b> /set_time <delete_time_in_seconds>",
+        reply_markup=InlineKeyboardMarkup(button),
+        parse_mode="html",
+        disable_web_page_preview=True
     )
     
 
