@@ -28,9 +28,9 @@ bot = Client(
 @bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
-        InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
+        InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
         ],[
-        InlineKeyboardButton("📝 Updates channel", url=f"https://t.me/botsync"),
+        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
         f"<b>Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time\nAdd me as a admin in your group and give delete permisions\nUsage:</b> /set_time <delete_time_in_seconds>",
