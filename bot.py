@@ -4,6 +4,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from flask import Flask, redirect
 from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
+from html import escape
 
 
 API_ID = os.environ.get("API_ID")
@@ -24,7 +25,6 @@ bot = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN)
 
-
 @bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
@@ -33,9 +33,10 @@ async def start(_, message):
         InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"**Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <delete_time_in_seconds>`",
+        f"**Hello <a href='tg://user?id={message.from_user.id}'>{escape(message.from_user.first_name)}</a>,\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <delete_time_in_seconds>`",
         reply_markup=InlineKeyboardMarkup(button),
-        disable_web_page_preview=True
+        disable_web_page_preview=True,
+        parse_mode=enums.ParseMode.HTML,
     )
     
 @bot.on_message(filters.command("set_time"))
