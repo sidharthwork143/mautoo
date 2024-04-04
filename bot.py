@@ -25,7 +25,7 @@ bot = Client(
     bot_token=BOT_TOKEN)
 
 
-@Client.on_message(filters.command("start") & filters.private)
+@bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
         InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
@@ -39,7 +39,7 @@ async def start(_, message):
         disable_web_page_preview=True
     )
     
-@Client.on_message(filters.command("set_time"))
+@bot.on_message(filters.command("set_time"))
 async def set_delete_time(_, message):
 
     # Check if the message is from a private chat
@@ -81,7 +81,7 @@ async def set_delete_time(_, message):
     except Exception as e:
         await message.reply_text(f"An error occurred: {e}")    
         
-@Client.on_message(filters.group)
+@bot.on_message(filters.group)
 async def delete_message(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
