@@ -33,7 +33,7 @@ async def start(_, message):
         InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"<b>Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:</b> <code>/set_time <delete_time_in_seconds></code>",
+        f"**Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <delete_time_in_seconds>`",
         reply_markup=InlineKeyboardMarkup(button),
         disable_web_page_preview=True
     )
@@ -48,12 +48,12 @@ async def set_delete_time(_, message):
     
     # Extract group_id and delete_time from the message
     if len(message.text.split()) == 1:
-        await message.reply_text("<b>Please provide the delete time in seconds. Usage:</b> <code>/set_time <delete_time_in_seconds></code>")
+        await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <delete_time_in_seconds>`")
         return
 
     delete_time = message.text.split()[1]
     if not delete_time.isdigit():
-        await message.reply_text("<b>Delete time must be an integer.</b>")
+        await message.reply_text("Delete time must be an integer.")
         return
     
     chat_id = message.chat.id
@@ -65,7 +65,7 @@ async def set_delete_time(_, message):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
-        await message.reply("<b>Only group admins can enable or disable auto approve.</b>")
+        await message.reply("Only group admins can enable or disable auto approve.")
         return
     
     # Save to the database
@@ -75,7 +75,7 @@ async def set_delete_time(_, message):
         upsert=True
     )
     try:
-        await message.reply_text(f"<b>Set delete_time to {delete_time} seconds for this group.</b>")
+        await message.reply_text(f"**Set delete_time to {delete_time} seconds for this group.**")
     except Exception as e:
         await message.reply_text(f"Erorr: {e}")    
         
