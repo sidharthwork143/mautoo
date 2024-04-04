@@ -33,7 +33,7 @@ async def start(_, message):
         InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"<b>Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time\nAdd me as a admin in your group and give delete permisions\nUsage:</b> /set_time <delete_time_in_seconds>",
+        f"<b>Hello {message.from_user.mention},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time\nUsage:</b> <code>/set_time <delete_time_in_seconds></code>",
         reply_markup=InlineKeyboardMarkup(button),
         parse_mode=enums.ParseMode.HTML,
         disable_web_page_preview=True
@@ -49,12 +49,12 @@ async def set_delete_time(_, message):
     
     # Extract group_id and delete_time from the message
     if len(message.text.split()) == 1:
-        await message.reply_text("Please provide the delete time in seconds. /set_time <delete_time_in_seconds>")
+        await message.reply_text("<b>Please provide the delete time in seconds. Usage:</b> <code>/set_time <delete_time_in_seconds></code>")
         return
 
     delete_time = message.text.split()[1]
     if not delete_time.isdigit():
-        await message.reply_text("Delete time must be an integer.")
+        await message.reply_text("<b>Delete time must be an integer.</b>")
         return
     
     chat_id = message.chat.id
@@ -66,7 +66,7 @@ async def set_delete_time(_, message):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
-        await message.reply("Only group admins can enable or disable auto approve.")
+        await message.reply("<b>Only group admins can enable or disable auto approve.</b>")
         return
     
     # Save to the database
@@ -76,7 +76,7 @@ async def set_delete_time(_, message):
         upsert=True
     )
     try:
-        await message.reply_text(f"Set delete_time to {delete_time} seconds for this group.")
+        await message.reply_text(f"<b>Set delete_time to {delete_time} seconds for this group.</b>")
     except Exception as e:
         await message.reply_text(f"Erorr: {e}")    
         
