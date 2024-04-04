@@ -18,14 +18,14 @@ db = client['databas']
 groups = db['group_id']
 
 
-app = Client(
+bot = Client(
     "bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN)
 
 
-app.on_message(filters.command("start") & filters.private)
+@bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
         InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages")
@@ -36,7 +36,7 @@ async def start(_, message):
     )
     
 
-@app.on_message(filters.command("set_time"))
+@bot.on_message(filters.command("set_time"))
 async def set_delete_time(app, message):
 
         # Check if the message is from a private chat
@@ -79,7 +79,7 @@ async def set_delete_time(app, message):
     except Exception as e:
         await message.reply_text(f"An error occurred: {e}")    
 
-app.on_message(filters.group)
+@bot.on_message(filters.group)
 async def delete_message(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -104,16 +104,16 @@ async def delete_message(_, message):
 
 
 # Flask configuration
-web = Flask(__name__)
+app = Flask(__name__)
 
-@web.route('/')
+@app.route('/')
 def index():
-    return redirect("https://telegram.me/botsync", code=302)
+    return redirect(f"https://telegram.me/{BOT_USERNAME}", code=302)
 
 def run():
-    web.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
 
 if __name__ == "__main__":
     t = Thread(target=run)
     t.start()
-    app.run()    
+    bot.run()    
