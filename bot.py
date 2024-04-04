@@ -102,7 +102,7 @@ async def delete_message(_, message):
 
     try:
         # Delete the message
-        await message.delete(delay=delete_time)
+        await message.delete(delete_time)
     except Exception as e:
         print(f"An error occurred: {e}/n/n Group ID: {chat_id}")    
 
