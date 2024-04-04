@@ -78,7 +78,7 @@ async def set_delete_time(_, message):
     try:
         await message.reply_text(f"Set delete_time to {delete_time} seconds for this group.")
     except Exception as e:
-        await message.reply_text(f"An error occurred: {e}")    
+        await message.reply_text(f"Erorr: {e}")    
         
 @bot.on_message(filters.group)
 async def delete_message(_, message):
@@ -104,7 +104,7 @@ async def delete_message(_, message):
         # Delete the message
         await message.delete(delete_time)
     except Exception as e:
-        print(f"An error occurred: {e}/n/n Group ID: {chat_id}")    
+        print(f"An error occurred: {e}/nGroup ID: {chat_id}")    
 
 
 # Flask configuration
