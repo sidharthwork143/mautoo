@@ -25,7 +25,7 @@ bot = Client(
     bot_token=BOT_TOKEN)
 
 
-@bot.on_message(filters.command("start") & filters.private)
+@Client.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
         InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
@@ -39,11 +39,10 @@ async def start(_, message):
         disable_web_page_preview=True
     )
     
+@Client.on_message(filters.command("set_time"))
+async def set_delete_time(_, message):
 
-@bot.on_message(filters.command("set_time"))
-async def set_delete_time(app, message):
-
-        # Check if the message is from a private chat
+    # Check if the message is from a private chat
     if message.chat.type in [enums.ChatType.PRIVATE]:
         await message.reply("This command can only be used in groups.")
         return
@@ -54,7 +53,7 @@ async def set_delete_time(app, message):
         await message.reply_text("Usage: /set_time <delete_time_in_seconds>")
         return
 
-    delete_time = args[1]
+    delete_time = args[2]  # Corrected index
     if not delete_time.isdigit():
         await message.reply_text("Delete time must be an integer.")
         return
@@ -71,7 +70,6 @@ async def set_delete_time(app, message):
         await message.reply("Only group admins can enable or disable auto approve.")
         return
     
-
     # Save to the database
     await groups.update_one(
         {"group_id": chat_id},
@@ -79,11 +77,11 @@ async def set_delete_time(app, message):
         upsert=True
     )
     try:
-        await message.reply_text(f"Set delete time to {delete_time} seconds for this group.")
+        await message.reply_text(f"Set delete_time to {delete_time} seconds for this group.")
     except Exception as e:
         await message.reply_text(f"An error occurred: {e}")    
-
-@bot.on_message(filters.group)
+        
+@Client.on_message(filters.group)
 async def delete_message(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
