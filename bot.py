@@ -48,12 +48,11 @@ async def set_delete_time(_, message):
         return
     
     # Extract group_id and delete_time from the message
-    args = message.text.split()
-    if len(args) != 3:
-        await message.reply_text("Usage: /set_time <delete_time_in_seconds>")
+    if len(message.text.split()) == 1:
+        await message.reply_text("Please provide the delete time in seconds. /set_time <delete_time_in_seconds>")
         return
 
-    delete_time = args[2]  # Corrected index
+    delete_time = message.text.split()[1]
     if not delete_time.isdigit():
         await message.reply_text("Delete time must be an integer.")
         return
