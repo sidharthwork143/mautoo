@@ -1,5 +1,6 @@
 import os
 from pyrogram import Client, filters, enums
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from flask import Flask, redirect
 from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,6 +10,7 @@ API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
+BOT_USERNAME = os.environ.get("BOT_USERNAME") # Without @
 
 #database
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -25,9 +27,15 @@ app = Client(
 
 app.on_message(filters.command("start") & filters.private)
 async def start(_, message):
+    button = [[
+        InlineKeyboardButton("👥 Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages")
+    ]]
     await message.reply_text(
-        f"Hello {message.from_user.mention},\n\nI am a AutoDelete Bot.\n\nI can delete your groups messages automatically after a certain period of time\n\n Add me as a admin in your group and give delete permisions\n\nUsage: /set_time <delete_time_in_seconds>")
+        f"Hello {message.from_user.mention},\n\nI am a AutoDelete Bot.\n\nI can delete your groups messages automatically after a certain period of time\n\n Add me as a admin in your group and give delete permisions\n\nUsage: /set_time <delete_time_in_seconds>",
+        reply_markup=InlineKeyboardMarkup(button)
+    )
     
+
 @app.on_message(filters.command("set_time"))
 async def set_delete_time(app, message):
 
