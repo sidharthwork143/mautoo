@@ -62,7 +62,7 @@ async def set_delete_time(_, message):
 
     # Check if the user is the group owner or an admin
     administrators = []
-    async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+    async for m in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
@@ -87,7 +87,7 @@ async def delete_message(_, message):
 
     # Check if the user is the group owner or an admin
     administrators = []
-    async for m in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+    async for m in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
 
     if user_id not in administrators:
