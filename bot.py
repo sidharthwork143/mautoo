@@ -31,7 +31,7 @@ async def start(_, message):
         InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"**Hello {message.from_user.first_name},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <delete_time_in_seconds>`",
+        f"**Hello {message.from_user.first_name},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <time_in_seconds>`",
         reply_markup=InlineKeyboardMarkup(button),
         parse_mode=enums.ParseMode.MARKDOWN
     )
@@ -46,7 +46,7 @@ async def set_delete_time(_, message):
     
     # Extract group_id and delete_time from the message
     if len(message.text.split()) == 1:
-        await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <delete_time_in_seconds>`")
+        await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <time_in_seconds>`")
         return
 
     delete_time = message.text.split()[1]
