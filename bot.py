@@ -87,7 +87,7 @@ async def delete_message(_, message):
     async for m in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
 
-    if user_id not in administrators and not message.from_user.is_bot:
+    if user_id in administrators and user_id is not message.from_user.is_bot:
         return
 
     # Check if the group has a delete time set
