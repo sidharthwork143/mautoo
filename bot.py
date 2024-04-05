@@ -73,7 +73,7 @@ async def set_delete_time(_, message):
         upsert=True
     )
     try:
-        await message.reply_text(f"**Set delete_time to {delete_time} seconds for this group.**")
+        await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
     except Exception as e:
         await message.reply_text(f"Erorr: {e}")    
         
