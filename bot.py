@@ -4,6 +4,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from flask import Flask, redirect
 from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
+import asyncio
 
 API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
@@ -101,7 +102,8 @@ async def delete_message(_, message):
 
     try:
         # Delete the message
-        await message.delete(delete_time)
+        await asyncio.sleep(int(delete_time))
+        await message.delete()
     except Exception as e:
         print(f"An error occurred: {e}/nGroup ID: {chat_id}")    
 
