@@ -50,7 +50,7 @@ async def set_delete_time(_, message):
         await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <time_in_seconds>`")
         return
 
-    delete_time = int(message.text.split()[1])
+    delete_time = message.text.split()[1]
     if not delete_time.isdigit():
         await message.reply_text("Delete time must be an integer.")
         return
