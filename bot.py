@@ -98,7 +98,7 @@ async def delete_message(_, message):
     if not group:
         return
 
-    delete_time = group["delete_time"]
+    delete_time = int(group["delete_time"])
 
     try:
         # Delete the message
