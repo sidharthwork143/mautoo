@@ -19,10 +19,13 @@ groups = db['group_id']
 
 
 bot = Client(
-    "bot",
+    "deletebot",
     api_id=API_ID,
     api_hash=API_HASH,
-    bot_token=BOT_TOKEN)
+    bot_token=BOT_TOKEN,
+    workers=300,
+    sleep_threshold=10
+)
 
 @bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
@@ -76,9 +79,9 @@ async def set_delete_time(_, message):
     try:
         await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
     except Exception as e:
-        await message.reply_text(f"Erorr: {e}")    
-        
-@bot.on_message(filters.group)
+        await message.reply_text(f"Erorr: {e}")
+         
+@bot.on_message(filters.group & filters.text)
 async def delete_message(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
