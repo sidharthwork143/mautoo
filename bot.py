@@ -42,34 +42,27 @@ async def start(_, message):
     
 @bot.on_message(filters.command("set_time"))
 async def set_delete_time(_, message):
-
     # Check if the message is from a private chat
     if message.chat.type in [enums.ChatType.PRIVATE]:
         await message.reply("This command can only be used in groups.")
         return
-    
     # Extract group_id and delete_time from the message
     if len(message.text.split()) == 1:
         await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <time_in_seconds>`")
         return
-
     delete_time = message.text.split()[1]
     if not delete_time.isdigit():
         await message.reply_text("Delete time must be an integer.")
         return
-    
     chat_id = message.chat.id
     user_id = message.from_user.id
-
     # Check if the user is the group owner or an admin
     administrators = []
     async for m in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
         administrators.append(m.user.id)
-
     if user_id not in administrators:
         await message.reply("Only group admins can enable or disable auto approve.")
         return
-    
     # Save to the database
     await groups.update_one(
         {"group_id": chat_id},
@@ -84,25 +77,11 @@ async def set_delete_time(_, message):
 @bot.on_message(filters.group & filters.text)
 async def delete_message(_, message):
     chat_id = message.chat.id
-    user_id = message.from_user.id
-    is_bot = message.from_user.is_bot
-
-    # Check if the user is the group owner or an admin
-    administrators = []
-    async for m in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
-        administrators.append(m.user.id)
-
-    # If the user is an admin or a bot with admin permissions, don't delete the message
-    if user_id in administrators and not is_bot:
-        return
-
     # Check if the group has a delete time set
     group = await groups.find_one({"group_id": chat_id})
     if not group:
         return
-
     delete_time = int(group["delete_time"])
-
     try:
         # Delete the message
         await asyncio.sleep(delete_time)
