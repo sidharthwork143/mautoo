@@ -1,11 +1,12 @@
 import os
 import re
 import asyncio
-from threading import Thread
+from typing import Optional
 
+import quart
+from quart import Quart, redirect
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from flask import Flask, redirect
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Environment Variables
@@ -19,7 +20,7 @@ BOT_USERNAME = os.environ.get("BOT_USERNAME")  # Without @
 DEFAULT_DELETE_TIME = 600
 
 # In-memory cache for group settings
-GROUP_SETTINGS = {}
+GROUP_SETTINGS: dict = {}
 
 # Database initialization
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -36,7 +37,7 @@ bot = Client(
     sleep_threshold=10
 )
 
-def parse_time_to_seconds(time_str):
+def parse_time_to_seconds(time_str: Optional[str]) -> Optional[int]:
     """
     Parse human-readable time string to seconds.
     Supports formats: 
@@ -46,13 +47,6 @@ def parse_time_to_seconds(time_str):
     - 'h' for hours
     - 'd' for days
     - 'w' for weeks
-
-    Examples:
-    30 or 30s = 30 seconds
-    5m = 300 seconds
-    2h = 7200 seconds
-    1d = 86400 seconds
-    1w = 604800 seconds
     """
     if not time_str:
         return None
@@ -92,7 +86,7 @@ def parse_time_to_seconds(time_str):
 
     return total_seconds
 
-async def load_group_settings():
+async def load_group_settings() -> None:
     """
     Preload group settings into memory to reduce database calls.
     This should be called once when the bot starts.
@@ -102,7 +96,7 @@ async def load_group_settings():
     async for group in cursor:
         GROUP_SETTINGS[group['group_id']] = group.get('delete_time', DEFAULT_DELETE_TIME)
 
-async def update_group_settings(chat_id, delete_time=None):
+async def update_group_settings(chat_id: int, delete_time: Optional[int] = None) -> None:
     """
     Update group settings in both database and in-memory cache.
     
@@ -285,27 +279,30 @@ async def delete_message(_, message):
     except Exception as e:
         print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
-# Flask configuration
-app = Flask(__name__)
+# Quart configuration
+app = Quart(__name__)
 
 @app.route('/')
-def index():
-    return redirect(f"https://telegram.me/{BOT_USERNAME}", code=302)
+async def index():
+    return await redirect(f"https://telegram.me/{BOT_USERNAME}", code=302)
 
-def run():
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+async def run_app():
+    await app.run_task(
+        host="0.0.0.0", 
+        port=int(os.environ.get('PORT', 8080)), 
+        debug=False
+    )
 
 async def main():
     # Load group settings before starting the bot
     await load_group_settings()
     
-    # Create a task to run the Flask server
-    flask_thread = Thread(target=run)
-    flask_thread.start()
-    
-    # Run the Telegram bot
-    await bot.start()
-    await bot.idle()
+    # Create tasks for bot and Quart app
+    await asyncio.gather(
+        bot.start(),
+        run_app(),
+        bot.idle()
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
