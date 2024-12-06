@@ -1,14 +1,13 @@
 import os
 import re
 import asyncio
-import threading
 from typing import Optional
 
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters, enums, idle
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from flask import Flask, redirect
 from motor.motor_asyncio import AsyncIOMotorClient
 from pyrogram.errors import FloodWait
+from quart import Quart, redirect
 
 # Environment Variables
 API_ID = os.environ.get("API_ID")
@@ -38,35 +37,22 @@ bot = Client(
 )
 
 def parse_time_to_seconds(time_str: Optional[str]) -> Optional[int]:
-    """
-    Parse human-readable time string to seconds.
-    Supports formats: 
-    - Bare numbers (assumed seconds)
-    - 's' for seconds
-    - 'm' for minutes
-    - 'h' for hours
-    - 'd' for days
-    - 'w' for weeks
-    """
+    """Parse human-readable time string to seconds."""
     if not time_str:
         return None
 
-    # Remove whitespace
     time_str = time_str.strip().lower()
 
-    # If it's just a number, assume seconds
     if time_str.isdigit():
         return int(time_str)
 
-    # Regex to match number and optional unit
     match = re.match(r'^(\d+)([smhdw])?$', time_str)
     if not match:
         return None
 
     value = int(match.group(1))
-    unit = match.group(2) or 's'  # Default to seconds if no unit
+    unit = match.group(2) or 's'
 
-    # Convert to seconds based on unit
     time_multipliers = {
         's': 1,       # seconds
         'm': 60,      # minutes
@@ -75,46 +61,31 @@ def parse_time_to_seconds(time_str: Optional[str]) -> Optional[int]:
         'w': 604800   # weeks
     }
 
-    # Calculate total seconds
     total_seconds = value * time_multipliers.get(unit, 1)
 
-    # Additional validation
-    if total_seconds < 30:
-        return None  # Minimum 30 seconds
-    if total_seconds > 604800:  # Maximum 1 week
+    if total_seconds < 30 or total_seconds > 604800:
         return None
 
     return total_seconds
 
 async def load_group_settings():
-    """
-    Preload group settings into memory to reduce database calls.
-    """
+    """Preload group settings into memory to reduce database calls."""
     global GROUP_SETTINGS
     cursor = groups_collection.find({})
     async for group in cursor:
         GROUP_SETTINGS[group['group_id']] = group.get('delete_time', DEFAULT_DELETE_TIME)
 
 async def update_group_settings(chat_id, delete_time=None):
-    """
-    Update group settings in both database and in-memory cache.
-    
-    :param chat_id: Telegram group ID
-    :param delete_time: Time in seconds to delete messages (optional)
-    """
+    """Update group settings in both database and in-memory cache."""
     try:
         if delete_time is not None:
-            # Update database
             await groups_collection.update_one(
                 {"group_id": chat_id},
                 {"$set": {"delete_time": delete_time}},
                 upsert=True
             )
-            
-            # Update in-memory cache
             GROUP_SETTINGS[chat_id] = int(delete_time)
         else:
-            # If no delete time provided, set to default
             await groups_collection.update_one(
                 {"group_id": chat_id},
                 {"$set": {"delete_time": DEFAULT_DELETE_TIME}},
@@ -126,21 +97,14 @@ async def update_group_settings(chat_id, delete_time=None):
 
 @bot.on_message(filters.new_chat_members)
 async def handle_new_chat(_, message):
-    """
-    Handle bot being added to a new group.
-    Set default delete time of 10 minutes.
-    """
+    """Handle bot being added to a new group."""
     for new_member in message.new_chat_members:
-        if new_member.is_self:  # Check if the new member is the bot itself
+        if new_member.is_self:
             chat_id = message.chat.id
-            
-            # Set default delete time when added to a new group
             await update_group_settings(chat_id)
-            
-            # Send welcome message with default settings
             welcome_text = (
                 "**Hello! I'm an AutoDelete Bot 🤖**\n\n"
-                f"I've automatically set message auto-delete to **10 minutes** for this group.\n\n"
+                "I've automatically set message auto-delete to **10 minutes** for this group.\n\n"
                 "**Time formats you can use:**\n"
                 "- `30` or `30s` = 30 seconds\n"
                 "- `5m` = 5 minutes\n"
@@ -149,11 +113,9 @@ async def handle_new_chat(_, message):
                 "- `1w` = 1 week\n\n"
                 "**Change time:** `/set_time <time>`"
             )
-            
             button = [[
                 InlineKeyboardButton("⏰ Change Delete Time", callback_data="change_time")
             ]]
-            
             await message.reply_text(
                 welcome_text,
                 reply_markup=InlineKeyboardMarkup(button),
@@ -163,10 +125,11 @@ async def handle_new_chat(_, message):
 
 @bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
+    """Handle the /start command."""
     button = [[
-        InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
-    ],[
-        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
+        InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{bot.username}?startgroup=none&admin=delete_messages"),
+    ], [
+        InlineKeyboardButton("📌 Updates channel", url="https://t.me/botsync"),
     ]]
     await message.reply_text(
         f"**Hello {message.from_user.first_name},\nI am an AutoDelete Bot, I can delete your groups' messages automatically.\n\n"
@@ -184,17 +147,14 @@ async def start(_, message):
 
 @bot.on_message(filters.command("set_time"))
 async def set_delete_time(_, message):
-    # Check if the message is from a private chat
+    """Handle the /set_time command."""
     if message.chat.type in [enums.ChatType.PRIVATE]:
         await message.reply("This command can only be used in groups.")
         return
 
-    # Extract group_id and delete_time from the message
     if len(message.text.split()) == 1:
-        # Show current delete time if no new time is specified
         current_time = GROUP_SETTINGS.get(message.chat.id, DEFAULT_DELETE_TIME)
-        
-        # Convert seconds to human-readable format
+
         def format_time(seconds):
             if seconds >= 604800:
                 return f"{seconds // 604800}w"
@@ -206,7 +166,7 @@ async def set_delete_time(_, message):
                 return f"{seconds // 60}m"
             else:
                 return f"{seconds}s"
-        
+
         await message.reply_text(
             f"**Current delete time is {format_time(current_time)}.**\n\n"
             "**Time formats:**\n"
@@ -219,9 +179,8 @@ async def set_delete_time(_, message):
         )
         return
 
-    # Parse the time string
     delete_time = parse_time_to_seconds(message.text.split()[1])
-    
+
     if delete_time is None:
         await message.reply_text(
             "**Invalid time format!**\n\n"
@@ -237,19 +196,16 @@ async def set_delete_time(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id
 
-    # Check if the user is the group owner or an admin
     administrators = [
         member.user.id async for member in bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)
     ]
-    
+
     if user_id not in administrators:
         await message.reply("Only group admins can set delete time.")
         return
 
-    # Update group settings
     await update_group_settings(chat_id, delete_time)
 
-    # Convert seconds to human-readable format for response
     def format_time(seconds):
         if seconds >= 604800:
             return f"{seconds // 604800}w"
@@ -266,45 +222,37 @@ async def set_delete_time(_, message):
 
 @bot.on_message(filters.group & filters.text)
 async def delete_message(_, message):
+    """Delete messages based on group settings."""
     chat_id = message.chat.id
-    
-    # Check group settings from memory cache
+
     delete_time = GROUP_SETTINGS.get(chat_id, DEFAULT_DELETE_TIME)
-    
+
     try:
-        # Delete the message after specified time
         await asyncio.sleep(delete_time)
         await message.delete()
     except FloodWait as e:
-        # Handle potential flood wait errors from Telegram
         await asyncio.sleep(e.x)
         await message.delete()
     except Exception as e:
         print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
-# Flask configuration
-app = Flask(__name__)
+# Quart application
+app = Quart(__name__)
 
 @app.route('/')
-def index():
+async def index():
     return redirect(f"https://telegram.me/AboutRazi", code=302)
 
-def run_flask():
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
-
 async def main():
-    # Load group settings before starting the bot
+    """Start the bot and Quart server."""
     await load_group_settings()
-    
-    # Create a thread to run the Flask server
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
-    
-    # Run the Telegram bot
+
+    quart_task = asyncio.create_task(app.run_task(host="0.0.0.0", port=int(os.environ.get('PORT', 8080))))
     await bot.start()
-    
-    # Keep the bot running 
-    await bot.handle_updates()
+    await idle()
+    quart_task.cancel()
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
