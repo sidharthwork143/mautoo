@@ -1,13 +1,14 @@
 import os
 import re
 import asyncio
+import threading
 from typing import Optional
 
-import quart
-from quart import Quart, redirect
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from flask import Flask, redirect
 from motor.motor_asyncio import AsyncIOMotorClient
+from pyrogram.errors import FloodWait
 
 # Environment Variables
 API_ID = os.environ.get("API_ID")
@@ -19,7 +20,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 DEFAULT_DELETE_TIME = 600
 
 # In-memory cache for group settings
-GROUP_SETTINGS: dict = {}
+GROUP_SETTINGS = {}
 
 # Database initialization
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -85,17 +86,16 @@ def parse_time_to_seconds(time_str: Optional[str]) -> Optional[int]:
 
     return total_seconds
 
-async def load_group_settings() -> None:
+async def load_group_settings():
     """
     Preload group settings into memory to reduce database calls.
-    This should be called once when the bot starts.
     """
     global GROUP_SETTINGS
     cursor = groups_collection.find({})
     async for group in cursor:
         GROUP_SETTINGS[group['group_id']] = group.get('delete_time', DEFAULT_DELETE_TIME)
 
-async def update_group_settings(chat_id: int, delete_time: Optional[int] = None) -> None:
+async def update_group_settings(chat_id, delete_time=None):
     """
     Update group settings in both database and in-memory cache.
     
@@ -275,33 +275,36 @@ async def delete_message(_, message):
         # Delete the message after specified time
         await asyncio.sleep(delete_time)
         await message.delete()
+    except FloodWait as e:
+        # Handle potential flood wait errors from Telegram
+        await asyncio.sleep(e.x)
+        await message.delete()
     except Exception as e:
         print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
-# Quart configuration
-app = Quart(__name__)
+# Flask configuration
+app = Flask(__name__)
 
 @app.route('/')
-async def index():
-    return await redirect(f"https://telegram.me/AboutRazi", code=302)
+def index():
+    return redirect(f"https://telegram.me/AboutRazi", code=302)
 
-async def run_app():
-    await app.run_task(
-        host="0.0.0.0", 
-        port=int(os.environ.get('PORT', 8080)), 
-        debug=False
-    )
+def run_flask():
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
 
 async def main():
     # Load group settings before starting the bot
     await load_group_settings()
     
-    # Create tasks for bot and Quart app
-    await asyncio.gather(
-        bot.start(),
-        run_app(),
-        bot.idle()
-    )
+    # Create a thread to run the Flask server
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    
+    # Run the Telegram bot
+    await bot.start()
+    
+    # Keep the bot running 
+    await bot.handle_updates()
 
 if __name__ == "__main__":
     asyncio.run(main())
