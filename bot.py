@@ -14,7 +14,6 @@ API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
-BOT_USERNAME = os.environ.get("BOT_USERNAME")  # Without @
 
 # Default delete time (10 minutes = 600 seconds)
 DEFAULT_DELETE_TIME = 600
@@ -284,7 +283,7 @@ app = Quart(__name__)
 
 @app.route('/')
 async def index():
-    return await redirect(f"https://telegram.me/{BOT_USERNAME}", code=302)
+    return await redirect(f"https://telegram.me/AboutRazi", code=302)
 
 async def run_app():
     await app.run_task(
