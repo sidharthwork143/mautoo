@@ -2,6 +2,7 @@ import os, re, asyncio
 from typing import Optional
 
 from pyrogram import Client, filters, enums, idle
+from pyrogram.errors import FloodWait
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from motor.motor_asyncio import AsyncIOMotorClient
 from pyrogram.errors import FloodWait
@@ -27,7 +28,7 @@ bot = Client(
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
-    workers=300,
+    workers=100,
     sleep_threshold=10
 )
 
@@ -49,13 +50,13 @@ def parse_time_to_seconds(time_str: Optional[str]) -> Optional[int]:
     return total_seconds if 30 <= total_seconds <= 604800 else None
 
 async def load_group_settings():
-    """Preload group settings into memory."""
-    cursor = groups_collection.find({})
+    """Preload group settings into memory to reduce database calls."""
     global GROUP_SETTINGS
-    GROUP_SETTINGS = {
-        group['group_id']: group.get('delete_time', DEFAULT_DELETE_TIME)
-        async for group in cursor
-    }
+    cursor = groups_collection.find({})
+    async for group in cursor:
+        GROUP_SETTINGS[group['group_id']] = group.get('delete_time', DEFAULT_DELETE_TIME)
+    print("Group settings loaded into memory.")
+
 
 async def update_group_settings(chat_id, delete_time=None):
     """Update group settings in both database and memory."""
@@ -149,9 +150,20 @@ async def index():
 
 async def main():
     await load_group_settings()
-    await bot.start()
-    quart_task = asyncio.create_task(app.run_task(host="0.0.0.0", port=int(os.environ.get('PORT', 8080))))
-    await asyncio.gather(bot.idle(), quart_task)
+    quart_task = app.run_task(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
+
+    async def start_bot():
+        while True:
+            try:
+                await bot.start()
+                print("Bot started successfully.")
+                await idle()  # Keeps the bot running
+                break  # Exit the loop if successful
+            except FloodWait as e:
+                print(f"FloodWait: Need to wait for {e.x} seconds before retrying.")
+                await asyncio.sleep(e.x)
+    await asyncio.gather(start_bot(), quart_task)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
