@@ -10,7 +10,6 @@ API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
-BOT_USERNAME = os.environ.get("BOT_USERNAME") # Without @
 
 #database
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -95,7 +94,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return redirect(f"https://telegram.me/{BOT_USERNAME}", code=302)
+    return redirect(f"https://telegram.me/AboutRazi", code=302)
 
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
