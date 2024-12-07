@@ -32,6 +32,7 @@ API_ID = get_env_var("API_ID")
 API_HASH = get_env_var("API_HASH")
 BOT_TOKEN = get_env_var("BOT_TOKEN")
 DATABASE_URL = get_env_var("DATABASE_URL")
+BOT_USERNAME = get_env_var("BOT_USERNAME", "BotsyncBot")
 
 class AutoDeleteBot:
     def __init__(self):
