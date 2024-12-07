@@ -244,13 +244,9 @@ async def index():
     return redirect(f"https://telegram.me/AboutRazi", code=302)
 
 async def main():
-    """Start the bot and Quart server."""
     await load_group_settings()
-
     quart_task = asyncio.create_task(app.run_task(host="0.0.0.0", port=int(os.environ.get('PORT', 8080))))
     await bot.start()
-    await idle()
-    quart_task.cancel()
 
 if __name__ == "__main__":
     asyncio.run(main())
