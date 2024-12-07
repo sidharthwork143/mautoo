@@ -191,6 +191,32 @@ class AutoDeleteBot:
             except Exception as e:
                 logger.error(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
+        
+        @self.bot.on_message(filters.group & filters.bot)
+        async def delete_bot_message(_, message):
+            chat_id = message.chat.id
+            
+            # Check if the group has a delete time set in cache
+            group_settings = self.groups_data.get(chat_id)
+            if not group_settings:
+                return
+            
+            delete_time = group_settings.get("delete_time", 600)
+            
+            try:
+                # Delete the message after specified time
+                await asyncio.sleep(delete_time)
+                await message.delete()
+            except FloodWait as e:
+                # Handle Telegram's flood wait
+                logger.warning(f"Flood wait encountered. Sleeping for {e.x} seconds.")
+                await asyncio.sleep(e.x)
+            except MessageDeleteForbidden:
+                logger.info(f"Cannot delete message in chat {chat_id}. Possibly due to permissions.")
+            except Exception as e:
+                logger.error(f"An error occurred: {e}\nGroup ID: {chat_id}")
+
+    
     def setup_flask_routes(self):
         """Set up Flask routes for web ping."""
         @self.flask_app.route('/')
