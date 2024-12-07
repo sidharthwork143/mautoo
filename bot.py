@@ -2,7 +2,7 @@ import os
 import re
 import asyncio
 from typing import Dict, Optional
-from pyrogram import Client, filters, enums
+from pyrogram import Client, filters, enums, idle
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from flask import Flask, redirect
 from threading import Thread
