@@ -167,7 +167,7 @@ class AutoDeleteBot:
             
             await message.reply_text(f"**Set delete time to {delete_time_str} for this group.**")
 
-        @self.bot.on_message(filters.group & filters.text)
+        @self.bot.on_message(filters.group)
         async def delete_message(_, message):
             chat_id = message.chat.id
             
