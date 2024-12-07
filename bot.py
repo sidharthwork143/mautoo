@@ -144,9 +144,7 @@ async def delete_message(_, message):
     if not group_settings:
         return
     
-    delete_time = group_settings.get("delete_time", 0)
-    if delete_time <= 0:
-        return
+    delete_time = group_settings.get("delete_time", 600)
     
     try:
         # Delete the message after specified time
