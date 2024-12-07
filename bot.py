@@ -160,8 +160,11 @@ async def main():
                 await idle()  # Keeps the bot running
                 break  # Exit the loop if successful
             except FloodWait as e:
-                print(f"FloodWait: Need to wait for {e.x} seconds before retrying.")
-                await asyncio.sleep(e.x)
+                print(f"FloodWait: Need to wait for {e.value} seconds before retrying.")
+                await asyncio.sleep(e.value)
+            except Exception as ex:
+                print(f"Unexpected error: {ex}")
+                break
     await asyncio.gather(start_bot(), quart_task)
 
 
