@@ -215,7 +215,7 @@ class AutoDeleteBot:
         logger.info("Bot started successfully.")
         
         # Keep the bot running
-        await self.bot.idle()
+        await idle()
 
 def main():
     bot = AutoDeleteBot()
