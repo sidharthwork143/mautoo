@@ -10,7 +10,7 @@ API_ID = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 DATABASE_URL = os.environ.get("DATABASE_URL")
-BOT_USERNAME = os.environ.get("BOT_USERNAME", "BotsyncBot")
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "cleanerfmrobot")
 
 #database
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -32,7 +32,7 @@ async def start(_, message):
     button = [[
         InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
         ],[
-        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
+        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/filmy_men"),
     ]]
     await message.reply_text(
         f"**Hello {message.from_user.first_name},\nI am a AutoDelete Bot, I can delete your groups messages automatically after a certain period of time.\nUsage:** `/set_time <time_in_seconds>`",
@@ -95,7 +95,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return redirect(f"https://telegram.me/AboutRazi", code=302)
+    return redirect(f"https://telegram.me/gojo_satoruji", code=302)
 
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
